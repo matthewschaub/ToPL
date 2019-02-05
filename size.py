@@ -25,10 +25,30 @@ def height(e): #compute the height of an expression
 		return 1 + height(e.lhs) + height(e.rhs)
 
 def same(e1, e2): #Return true if two expressions are identical
-	pass
+	assert isinstance(e1, Expr)
+	assert isinstance(e2, Expr)
+	#need to define behavior 
+
 def value(e): #compute the value of an expression
-	pass
+	assert isinstance(e, Expr)
+
+	if isinstance(e, BoolExpr):
+		return e.value
+
+	if isinstance(e, NotExpr):
+		return not value(e.expr)
+
+	if isinstance(e, AndExpr):
+		return value(e.lhs) and value(e.rhs)
+
+	if isinstance(e, OrExpr):
+		return value(e.lhs) or value(e.rhs)
+
+	
+
 def step(e): #Return an expression representing a single step of evaluation
 	pass
+
+
 def reduce(e):#Calls step repeatedly until the expression is non-reducible
 	pass

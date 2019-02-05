@@ -4,6 +4,7 @@ from size import *
 e1 = AndExpr(NotExpr(BoolExpr(True)), 
 	BoolExpr(False))
 
-e2 = BoolExpr(True)
+e2 = OrExpr(BoolExpr(False), BoolExpr(False))
+e3 = BoolExpr(True)
 
-print(height(e1))
+print(value(e2))
