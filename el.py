@@ -1,6 +1,7 @@
 class Expr:
 	pass
 
+
 class BoolExpr(Expr):
 	def __init__(self, val):
 		assert val == True or val == False
@@ -9,6 +10,8 @@ class BoolExpr(Expr):
 		if isinstance(other, BoolExpr):
 			return self.value == other.value 
 		return False
+	def __str__(self):
+		return str(self.value)
 
 class BinaryExpr(Expr):
 	def __init__(self, e1, e2):
@@ -22,7 +25,7 @@ class BinaryExpr(Expr):
 			return self.lhs == other.lhs and self.rhs == other.rhs
 		elif isinstance(self, OrExpr) and isinstance(other, OrExpr):
 			return self.lhs == other.lhs and self.rhs == other.rhs
-		return False; 
+		return False;
 
 class NotExpr(Expr):
 	def __init__(self, e):
@@ -32,9 +35,13 @@ class NotExpr(Expr):
 		if isinstance(other, NotExpr):
 			return self.expr == other.expr
 		return False; 
+	def __str__(self):
+		return "(Not " + str(self.expr) + ")"
 
 class AndExpr(BinaryExpr):
-	pass
+	def __str__(self):
+		return "(" + str(self.lhs) + " And " + str(self.rhs) + ")"
 
 class OrExpr(BinaryExpr):
-	pass
+	def __str__(self):
+		return "(" + str(self.lhs) + " Or " + str(self.rhs) +")"

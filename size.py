@@ -50,11 +50,53 @@ def value(e): #compute the value of an expression
 	if isinstance(e, OrExpr):
 		return value(e.lhs) or value(e.rhs)
 
-	
+def is_value(e):
+	return type(e) is BoolExpr
+
+def is_reducible(e):
+	return not isinstance(e, BoolExpr)
+
+def step_not(e):
+	if isinstance(e.expr, BoolExpr): #if is_value(e.expr): (alternative)
+		if e.expr.value == True:
+			return BoolExpr(False)
+		else: 
+			return BoolExpr(True)
+	return(e.expr)
+
+def step_and(e):
+	if isinstance(e.lhs, BoolExpr) and isinstance(e.rhs, BoolExpr):
+		return BoolExpr(value(e.lhs) and value(e.rhs))
+	if is_reducible(e.lhs):
+		return AndExpr(step(e.lhs), e.rhs)
+	if is_reducible(e.rhs):
+		return AndExpr(e.lhs, step(e.rhs))
+
+def step_or(e):
+	if isinstance(e.lhs, BoolExpr) and isinstance(e.rhs, BoolExpr):
+		return BoolExpr(value(e.lhs) or value(e.rhs))
+	if is_reducible(e.lhs):
+		return OrExpr(step(e.lhs), e.rhs)
+	if is_reducible(e.rhs):
+		return OrExpr(e.lhs, step(e.rhs))
 
 def step(e): #Return an expression representing a single step of evaluation
-	pass
+	assert isinstance(e, Expr)
+	assert is_reducible(e)
+	if isinstance(e, NotExpr):
+		return step_not(e)
+
+	if isinstance(e, AndExpr):
+		return step_and(e)
+
+	if isinstance(e, OrExpr):
+		return step_or(e)
+
 
 
 def reduce(e):#Calls step repeatedly until the expression is non-reducible
-	pass
+	print(e)
+	while is_reducible(e):
+		e = step(e)
+		print(e)
+	return e
