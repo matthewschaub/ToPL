@@ -22,7 +22,7 @@ def height(e): #compute the height of an expression
 		return 1 + height(e.expr)
 
 	if isinstance(e,BinaryExpr):
-		return 1 + height(e.lhs) + height(e.rhs)
+		return 1 + max(height(e.lhs), height(e.rhs))
 
 def same(e1, e2): #Return true if two expressions are identical
 	assert isinstance(e1, Expr)
