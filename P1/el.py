@@ -36,22 +36,42 @@ class OrExpr(BinaryExpr):
 		return "(" + str(self.lhs) + " Or " + str(self.rhs) +")"
 
 class IdExpr(Expr):
-  """Represents identifiers that refer to
-  variables."""
-  def __init__(self, id):
-    self.id = id
-    self.ref = None
+	def __init__(self, id):
+		self.id = id
+		self.ref = None
 
-  def __str__(self):
-    return self.id
+	def __str__(self):
+		return self.id
 
 class VarDecl:
-  """Represents the declaration of a variable.
+	def __init__(self, id):
+		self.id = id
 
-  Note that this is NOT an expression. It is
-  the declaration of a name."""
-  def __init__(self, id):
-    self.id = id
+	def __str__(self):
+ 		return self.id
+
+
+class AbsExpr(Expr):
+  def __init__(self, var, e1):
+    if type(var) is str:
+      self.var = VarDecl(var)
+    else:
+      self.var = var
+    self.expr = e1
 
   def __str__(self):
-    return self.id
+    return f"\\{self.var}.{self.expr}"
+
+class AppExpr(Expr):
+	def __init__(self, lhs, rhs):
+		self.lhs = lhs
+		self.rhs = rhs
+
+	def __str__(self):
+		return f"({self.lhs} {self.rhs})"
+
+
+
+
+
+

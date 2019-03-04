@@ -1,10 +1,9 @@
 from el import *
 from size import *
 
-e1 = NotExpr(NotExpr(BoolExpr(True)))
+e1 = AbsExpr("a", "a")
 
-e2 = AndExpr(NotExpr(BoolExpr(True)), AndExpr(BoolExpr(False), BoolExpr(True)))
-e3 = AndExpr(NotExpr(BoolExpr(True)), AndExpr(BoolExpr(True), BoolExpr(True)))
-
-
-print(same(e3, e2))
+print(VarDecl("b"))
+print(IdExpr("x"))
+print(AppExpr(e1, IdExpr("a")))
+print(e1)
