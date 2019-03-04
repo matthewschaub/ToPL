@@ -34,3 +34,24 @@ class AndExpr(BinaryExpr):
 class OrExpr(BinaryExpr):
 	def __str__(self):
 		return "(" + str(self.lhs) + " Or " + str(self.rhs) +")"
+
+class IdExpr(Expr):
+  """Represents identifiers that refer to
+  variables."""
+  def __init__(self, id):
+    self.id = id
+    self.ref = None
+
+  def __str__(self):
+    return self.id
+
+class VarDecl:
+  """Represents the declaration of a variable.
+
+  Note that this is NOT an expression. It is
+  the declaration of a name."""
+  def __init__(self, id):
+    self.id = id
+
+  def __str__(self):
+    return self.id
