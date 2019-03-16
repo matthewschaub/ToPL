@@ -92,6 +92,12 @@ def step(e): #Return an expression representing a single step of evaluation
 	if isinstance(e, OrExpr):
 		return step_or(e)
 
+	if isinstance(e, AppExpr):
+		return step_app(expr)
+
+def step_app(e):
+	pass
+
 
 
 def reduce(e):#Calls step repeatedly until the expression is non-reducible
