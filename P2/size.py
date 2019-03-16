@@ -98,6 +98,20 @@ def step(e): #Return an expression representing a single step of evaluation
 def step_app(e):
 	pass
 
+def subst(e,s):
+	assert isinstance(e,Expr), "Expression type required"
+	
+	if e.is_a(IdExpr):
+		if e.ref in s:
+			return s[e.ref]
+		else:
+			return e
+
+	if isinstance(e,AbsExpr):
+		return AbsExpr(e.var,subst(e.expr,s))
+
+	if isinstance(e,AppExpr):
+		return AppExpr(subst(e.e1,s), subst(e.e2,s))
 
 
 def reduce(e):#Calls step repeatedly until the expression is non-reducible
