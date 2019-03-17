@@ -96,7 +96,20 @@ def step(e): #Return an expression representing a single step of evaluation
 		return step_app(expr)
 
 def step_app(e):
-	pass
+	if is_reducible(e.lhs): # App-1
+    return AppExpr(step(e.lhs), e.rhs)
+
+  if type(e.lhs) is not AbsExpr:
+    raise Exception("Non Lambda type")
+
+  if is_reducible(e.rhs): # App-2
+    return AppExpr(e.lhs, step(e.rhs))
+
+  s = {
+    e.lhs.var: e.rhs
+  }
+  return subst(e.lhs.expr, s);
+
 
 def subst(e,s):
 	assert isinstance(e,Expr), "Expression type required"
