@@ -110,6 +110,25 @@ def step_app(e):
   }
   return subst(e.lhs.expr, s);
 
+  def resolve(e, scope = []):
+  if type(e) is AppExpr:
+    resolve(e.lhs, scope)
+    resolve(e.rhs, scope)
+    return
+
+  if type(e) is AbsExpr:
+    resolve(e.expr, scope + [e.var])
+    return
+
+  if type(e) is IdExpr:
+    for var in reversed(scope):
+      if e.id == var.id:
+        e.ref = var 
+    raise Exception("name lookup error")
+
+  assert False
+
+
 
 def subst(e,s):
 	assert isinstance(e,Expr), "Expression type required"
