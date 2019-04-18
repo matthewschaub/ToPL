@@ -70,6 +70,29 @@ class AppExpr(Expr):
 	def __str__(self):
 		return f"({self.lhs} {self.rhs})"
 
+class LambdaExpr(Expr)
+  def __init__(self, vars, e1):
+    self.vars = []
+    for v in vars:
+    if type(var) is str:
+      self.vars[] += [VarDecl(var)]
+    else:
+      self.vars += [var]
+    self.expr = e1
+
+  def __str__(self):
+    return f"\\({",".join([str(v) for v in self.vars])}).{self.expr}"
+
+class CallExpr:
+  def __init__(self, fn, args):
+    self.fn = fn
+    self.args = args
+
+def is_value(e):
+  return type(e) in (IdExpr, AbsExpr, LambdaExpr)
+
+def is_reducible(e):
+  return not is_value(e)
 
 
 
