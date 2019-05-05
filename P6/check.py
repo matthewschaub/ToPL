@@ -1,37 +1,19 @@
 from lang import *
+from decorate import *
 
-# Implements the typing relation G |- e : T, which
-# is to say that every expression e has some type
-# T. If not, the expression is ill-typed (or
-# sometimes ill-formed).
-
+# Implements the typing relation G |- e : T, which is to say that 
+# every expression e has some type T. If not, the expression 
+# is ill-typed (or sometimes ill-formed).
+#
 # For example:
 #
 #   \x:Int.(3 + x)
 #
 # x has type int in the body of the abstraction.
 
-def is_bool(x):
-  # Returns true if x either is boolType (when
-  # x is a Type) or if x has boolType (when x
-  # is an expression). The latter case will
-  # recursively compute the the type of the
-  # expression as a "convenience".
-  if isinstance(x, Type):
-    return x == boolType
-  if isinstance(x, Expr):
-    return is_bool(check(x))
-
-def is_int(x):
-  # Same as above, but for int.
-  if isinstance(x, Type):
-    return x == intType
-  if isinstance(x, Expr):
-    return is_int(check(x))
-
-def is_same_type(t1, t2):
-  # Returns true if t1 and t2 are the same
-  # type (if both are types).
+@checked
+def is_same_type(t1 : Type, t2 : Type):
+  # Returns true if t1 and t2 are the same type (if both are types).
 
   # Quick reject. t1 and t2 are not objects
   # of the same type.
@@ -44,41 +26,111 @@ def is_same_type(t1, t2):
   if type(t1) is IntType:
     return True
 
+  if type(t1) is FnType:
+    for a, b in zip(t1.parms, t2.parms):
+      if not is_same_type(a, b):
+        return False
+    return is_same_type(t1.ret, t2.ret)
+
+  if type(t1) is RefType:
+    return is_same_type(t1.ref, t2.ref)
+
   assert False
 
-def has_same_type(e1, e2):
-  # Returns true if e1 and e2 have the
-  # same type (recursively computing the
-  # types of both expressions.)
+@checked
+def is_bool(t : Type):
+  # Returns true if t is Bool.
+  return t == boolType;
+
+@checked
+def is_int(t : Type):
+  # Returns true if t is Int.
+  return t == intType;
+
+@checked
+def is_function(t : Type):
+  # Returns true if t is a function type.
+  return type(t) is FnType
+
+@checked
+def is_reference(t : Type):
+  # Returns true if t is a reference type.
+  return type(t) is RefType
+
+@checked
+def is_reference_to(t : Type, u : Type):
+  # Returns true if t is a reference to u.
+  return is_reference(t) and is_same_type(t.ref, u)
+
+@checked
+def is_tuple(t : Type):
+  return type(t) is TupleType
+
+@checked
+def is_record(t : Type):
+  return type(t) is RecordType
+
+@checked
+def is_variant(t : Type):
+  return type(t) is VariantType
+
+@checked
+def has_same_type(e1 : Expr, e2 : Expr):
+  # Returns true if expressions e1 and e2 have the same type.
   return is_same_type(check(e1), check(e2))
 
-def check_bool(e):
+@checked
+def has_bool(e : Expr):
+  return is_same_type(check(e), boolType)
+
+@checked
+def has_int(e : Expr):
+  # Same as above, but for int.
+  return is_same_type(check(e), intType)
+
+@checked
+def check_bool(e : Expr):
   # ------------- T-Bool
   # G |- b : Bool
   return boolType
 
-def check_int(e):
+@checked
+def check_int(e : Expr):
   # ------------ T-Int
   # G |- n : Int
   return intType
 
-def check_logical_binary(e, op):
+@checked
+def check_logical_unary(e : Expr, op : str):
+  #  G |- e1 : Bool
+  # -----------------
+  # G |- op e1 : Bool
+  if is_bool(e.expr):
+    return boolType
+
+  raise Exception(f"invalid operands to '{op}'")
+
+@checked
+def check_logical_binary(e : Expr, op : str):
   # G |- e1 : Bool   G |- e2 : Bool
-  # ------------------------------- T-And
+  # -------------------------------
   #    G |- e1 op e2 : Bool
   
-  if is_bool(e1) and is_bool(e2):
+  if is_bool(e.lhs) and is_bool(e.rhs):
     return boolType
   
   raise Exception(f"invalid operands to '{op}'")
 
-def check_and(e):
+@checked
+def check_and(e : Expr):
   return check_logical_binary(e, "and")
 
-def check_or(e):
+@checked
+def check_or(e : Expr):
   return check_logical_binary(e, "or")
 
-def check_arithmetic_binary(e, op):
+@checked
+def check_arithmetic_binary(e : Expr, op : str):
   # G |- e1 : Int   G |- e2 : Int
   # ----------------------------- T-Add
   #      G |- e1 op e2 : Int
@@ -88,22 +140,28 @@ def check_arithmetic_binary(e, op):
   
   raise Exception(f"invalid operands to '{op}'")
 
-def check_add(e):
+@checked
+def check_add(e : Expr):
   return check_arithmetic_binary(e, "+")
 
-def check_sub(e):
+@checked
+def check_sub(e : Expr):
   return check_arithmetic_binary(e, "-")
 
-def check_mul(e):
+@checked
+def check_mul(e : Expr):
   return check_arithmetic_binary(e, "*")
 
-def check_div(e):
+@checked
+def check_div(e : Expr):
   return check_arithmetic_binary(e, "/")
 
-def check_rem(e):
+@checked
+def check_rem(e : Expr):
   return check_arithmetic_binary(e, "%")
 
-def check_relational(e, op):
+@checked
+def check_relational(e : Expr, op : str):
   # G |- e1 : T1   G |- e2 : T2
   # --------------------------- T-Eq
   #    G |- e1 op e2 : Bool
@@ -113,76 +171,205 @@ def check_relational(e, op):
   
   raise Exception(f"invalid operands to '{op}'")  
 
-def check_eq(e):
+@checked
+def check_eq(e : Expr):
   return check_relational(e, "==")
 
-def check_ne(e):
+@checked
+def check_ne(e : Expr):
   return check_relational(e, "!=")
 
-def check_lt(e):
+@checked
+def check_lt(e : Expr):
   return check_relational(e, "<")
 
-def check_gt(e):
+@checked
+def check_gt(e : Expr):
   return check_relational(e, ">")
 
-def check_le(e):
+@checked
+def check_le(e : Expr):
   return check_relational(e, "<=")
 
-def check_ge(e):
+@checked
+def check_ge(e : Expr):
   return check_relational(e, ">=")
 
-def check_id(e):
+@checked
+def check_id(e : Expr):
   #  x : T in G
   # -----------
   # G |- x : T
   #
-  # In essence, we are searching the type
-  # environment for the pair x : T. However,
-  # because we've previously bound the id
-  # to its declaration, we can simply refer
-  # directly to the type of the variable.
+  # In essence, we are searching the type environment for the 
+  # pair x : T. However, because we've previously bound the id
+  # to its declaration, we can simply refer directly to the 
+  # type of the variable.
   return e.ref.type
 
-def check_abs(e):
-  #   G, x:T1 |- e1 : T2
-  # ------------------------ T-abs
-  # G |- \x:T1.e1 : T1 -> T2
-  t1 = e.var.type
-  t2 = check(e.expr)
-  return ArrowType(t1, t2)
+@checked
+def check_lambda(e : Expr):
+  #  G, xi:Ti :- e0 : T0
+  # ---------------------
+  # G |- \(xi:Ti).e0 : (Ti) -> T0
+  parms = [check(p) for p in e.vars]
+  ret =  check(e.expr)
+  return FnType(parms, ret)
 
-def check_app(e):
-  # G |- e1 : T1 -> T2   G |- e2 : T1
-  # ---------------------------------
-  #        G |- e1 e2 : T2
+@checked
+def check_call(e : Expr):
+  t = check(e.fn)
+  if not is_function(t):
+    raise Exception("invalid function call")
+  
+  if len(e.args) < len(t.parms):
+    raise Exception("too few arguments")
+  if len(e.args) > len(t.parms):
+    raise Exception("too many arguments")
+
+  for i in range(len(e.args)):
+    arg = check(e.args[i])
+    parm = t.parms[i]
+    if not is_same_type(arg, parm):
+      raise Exception("parameter/argument mismatch")
+
+  return t.ret
+
+@checked
+def check_new(e : Expr):
+  #    G |- e1 : T1
+  # --------------------
+  # G |- new e1 : Ref T1
+  t = check(e.expr)
+  return RefType(t)
+
+@checked
+def check_deref(e : Expr):
+  # G |- e1 : Ref T1
+  # -----------------
+  #  G |- *e1 : T1
+  t = check(e.expr)
+  if not is_reference(t):
+    raise Exception("cannot dereference a non-reference")
+
+  return t.ref
+
+@checked
+def check_assign(e : Expr):
   t1 = check(e.lhs)
+  if not is_reference(t1):
+    raise Exception("operand is not a reference")
 
-  if type(t1) is not ArrowType:
-    raise Exception("application to non-abstraction")
+  t2 = check(e.rhs)
+  if not is_reference_to(t1, t2):
+    raise Exception("type mismatch in assignment")
 
-  if not is_same(t1.parm, t2):
-    raise Exception("invalid operand to abstraction")
+@checked
+def check_tuple(e : Expr):
+  ts = []
+  for x in e.elems:
+    ts += [check(x)]
+  return TupleType(ts)
+
+@checked
+def check_proj(e : Expr):
+  t1 = check(e.obj)
+  if not is_tuple(t1):
+    raise Exception("operand is not a tuple")
+  if e.index < 0:
+    raise Exception("negative projection index")
+  if e.index >= len(t1.elems):
+    raise Exception("projection index out of bounds")
+  t1.elems[e.index]
+  return t1.elems[e.index]
+
+@checked
+def check_record(e : Expr):
+  fs = []
+  for f in e.fields:
+    fs += [FieldDecl(f.id, check(f.value))]
+  return RecordType(fs)
+
+@checked
+def check_member(e : Expr):
+  t1 = check(e.obj)
+  if not is_record(t1):
+    raise Exception("operand is not a tuple")
+  
+  # Map the id to its corresponding field decl.
+  # TODO: We could build the lookup in the record type.
+  fs = {f.id:f for f in t1.fields}
+  if e.id not in fs:
+    raise Exception("no such member")
+  e.ref = fs[e.id]
+
+  # Return the type of the computed field.
+  return e.ref.type
+
+@checked
+def check_variant(e : Expr):
+  t1 = check(e.field.value)
+
+  # Check that a) there is a corresponding label
+  # in the type and that b) the type of the value
+  # is the same as that field.
+  fs = {f.id:f for f in e.variant.fields}
+  if e.field.id not in fs:
+    raise Exception("no matching label in variant")
+  f = fs[e.field.id]
+  if not is_same_type(t1, f.type):
+    raise Exception("type mismatch in variant")
+
+  return e.variant
+
+@checked
+def check_case(e : Expr):
+  t1 = check(e.expr)
+  if not is_variant(t1):
+    raise Exception("operand is not a variant")
+
+  # Build a field lookup table for typing cases.
+  fs = {f.id:f for f in t1.fields}
+
+  t2 = None
+  for c in e.cases:
+    # Compute the variable in each case
+    if c.id not in fs:
+      raise Exception("no matching case label in variant")
+    f = fs[c.id]
+    c.var.type = f.type
+
+    # Recursively type the expressions
+    t = check(c.expr)
+    if not t2:
+      t2 = t
+    else:
+      if not is_same_type(t, t2):
+        raise Exception("case type mismatch")
 
   return t2
 
-def do_check(e):
+@checked
+def do_check(e : Expr):
   # Compute the type of e.
-  assert isinstance(e, Expr)
 
+  # Boolean expressions
   if type(e) is BoolExpr:
     return check_bool(e)
 
   if type(e) is AndExpr:
-    return check_and(e)
+    return check_logical_binary(e, "and")
 
   if type(e) is OrExpr:
-    return check_or(e)
+    return check_logical_binary(e, "or")
 
   if type(e) is NotExpr:
-    return check_not(e)
+    return check_logical_unary(e, "not")
 
   if type(e) is IfExpr:
     return check_if(e)
+
+  # Arithmetic expressions
 
   if type(e) is IntExpr:
     return check_int(e)
@@ -205,6 +392,8 @@ def do_check(e):
   if type(e) is NegExpr:
     return check_neg(e)
 
+  # Relational expressions
+
   if type(e) is EqExpr:
     return check_eq(e)
 
@@ -223,10 +412,52 @@ def do_check(e):
   if type(e) is GeExpr:
     return check_ge(e)
 
+  if type(e) is IdExpr:
+    return check_id(e)
+
+  # Functional expressions
+
+  if type(e) is LambdaExpr:
+    return check_lambda(e)
+
+  if type(e) is CallExpr:
+    return check_call(e)
+
+  # Reference expressions
+
+  if type(e) is NewExpr:
+    return check_new(e)
+
+  if type(e) is DerefExpr:
+    return check_deref(e)
+
+  if type(e) is AssignExpr:
+    return check_assign(e)
+
+  # Data expressions
+
+  if type(e) is TupleExpr:
+    return check_tuple(e)
+
+  if type(e) is ProjExpr:
+    return check_proj(e)
+
+  if type(e) is RecordExpr:
+    return check_record(e)
+
+  if type(e) is MemberExpr:
+    return check_member(e)
+
+  if type(e) is VariantExpr:
+    return check_variant(e)
+
+  if type(e) is CaseExpr:
+    return check_case(e)
+
   assert False
 
-
-def check(e = {}):
+@checked
+def check(e : Expr):
   # Accepts an expression and returns its type.
 
   # If we've computed the type already, return it.
@@ -234,6 +465,5 @@ def check(e = {}):
     e.type = do_check(e)
 
   return e.type
-
 
 

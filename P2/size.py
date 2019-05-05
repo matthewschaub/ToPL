@@ -129,7 +129,6 @@ def step_app(e):
   assert False
 
 
-
 def subst(e,s):
 	assert isinstance(e,Expr), "Expression type required"
 	
